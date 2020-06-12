@@ -99,6 +99,11 @@ void *alloc_object_node(struct repository *r)
 	return obj;
 }
 
+/*
+ * The returned count is to be used as an index into commit slabs,
+ * that are *NOT* maintained per repository, and that is why a single
+ * global counter is used.
+ */
 static unsigned int alloc_commit_index(struct repository *r)
 {
 	static unsigned int parsed_commits_count = 0;
