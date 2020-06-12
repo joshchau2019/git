@@ -200,10 +200,23 @@ directory.
 SUBMODULES
 ----------
 
-If your repository contains one or more submodules, then those submodules will
-appear based on which you initialized with the `git submodule` command. If
-your sparse-checkout patterns exclude an initialized submodule, then that
-submodule will still appear in your working directory.
+If your repository contains one or more submodules, then those submodules
+will appear based on which you initialized with the `git submodule`
+command.  Submodules may have additional untracked files or code stored on
+other branches, so to avoid data loss, changing sparse inclusion/exclusion
+rules will not cause an already checked out submodule to be removed from
+the working copy.  Said another way, just as `checkout` will not cause
+submodules to be automatically removed or initialized even when switching
+between branches that remove or add submodules, using `sparse-checkout` to
+reduce or expand the scope of "interesting" files will not cause submodules
+to be automatically deinitialized or initialized either.  Adding or
+removing them must be done as a separate step with `git submodule init` or
+`git submodule deinit`.
+
+This may mean that even if your sparsity patterns include or exclude
+submodules, until you manually initialize or deinitialize them, commands
+like grep that work on tracked files in the working copy will ignore "not
+yet initialized" submodules and pay attention to "left behind" ones.
 
 
 SEE ALSO
