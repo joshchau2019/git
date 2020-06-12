@@ -87,6 +87,55 @@ static int commit_pos_cmp(const void *va, const void *vb)
 	       commit_pos_at(&commit_pos, b);
 }
 
+define_commit_slab(commit_graph_data_slab, struct commit_graph_data);
+static struct commit_graph_data_slab commit_graph_data_slab =
+	COMMIT_SLAB_INIT(1, commit_graph_data_slab);
+
+uint32_t commit_graph_position(const struct commit *c)
+{
+	struct commit_graph_data *data =
+		commit_graph_data_slab_peek(&commit_graph_data_slab, c);
+
+	return data ? data->graph_pos : COMMIT_NOT_FROM_GRAPH;
+}
+
+uint32_t commit_graph_generation(const struct commit *c)
+{
+	struct commit_graph_data *data =
+		commit_graph_data_slab_peek(&commit_graph_data_slab, c);
+
+	if (!data)
+		return GENERATION_NUMBER_INFINITY;
+	else if (data->graph_pos == COMMIT_NOT_FROM_GRAPH)
+		return GENERATION_NUMBER_INFINITY;
+
+	return data->generation;
+}
+
+static struct commit_graph_data *commit_graph_data_at(const struct commit *c)
+{
+	uint32_t i = commit_graph_data_slab.slab_count, j;
+	uint32_t slab_size = commit_graph_data_slab.slab_size;
+	struct commit_graph_data *data =
+		commit_graph_data_slab_at(&commit_graph_data_slab, c);
+
+	/*
+	 * commit-slab initializes elements with zero, overwrite this with
+	 * COMMIT_NOT_FROM_GRAPH for graph_pos.
+	 *
+	 * We avoid initializing generation with checking if graph position
+	 * is not COMMIT_NOT_FROM_GRAPH.
+	 */
+	for (; i < commit_graph_data_slab.slab_count; i++) {
+		for (j = 0; j < slab_size; j++) {
+			commit_graph_data_slab[i][j].graph_pos =
+				COMMIT_NOT_FROM_GRAPH;
+		}
+	}
+
+	return data;
+}
+
 static int commit_gen_cmp(const void *va, const void *vb)
 {
 	const struct commit *a = *(const struct commit **)va;
