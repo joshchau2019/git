@@ -4,8 +4,6 @@ pipeline {
     stage('Build') {
       steps {
         echo 'Jenkin Print Message'
-        sh '''javac HelloWorld.java
-java HelloWorld'''
       }
     }
 
